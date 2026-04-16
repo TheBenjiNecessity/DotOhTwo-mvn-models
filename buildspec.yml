@@ -13,39 +13,40 @@ version: 0.2
 #   sts:GetServiceBearerToken
 
 phases:
-  install:
-    runtime-versions:
-      java: corretto21
+    install:
+        runtime-versions:
+            java: corretto21
 
-  pre_build:
-    commands:
-      - echo Fetching CodeArtifact authorization token...
-      - export CODEARTIFACT_TOKEN=$(aws codeartifact get-authorization-token --domain $CODEARTIFACT_DOMAIN --domain-owner $CODEARTIFACT_DOMAIN_OWNER --query authorizationToken --output text)
-      - export CODEARTIFACT_REPO_URL=https://${CODEARTIFACT_DOMAIN}-${CODEARTIFACT_DOMAIN_OWNER}.d.codeartifact.${AWS_DEFAULT_REGION}.amazonaws.com/maven/${CODEARTIFACT_REPO}/
-      - mkdir -p /root/.m2
-      - |
-        cat > /root/.m2/settings.xml << EOF
-        <settings>
-          <servers>
-            <server>
-              <id>codeartifact</id>
-              <username>aws</username>
-              <password>$CODEARTIFACT_TOKEN</password>
-            </server>
-          </servers>
-        </settings>
-        EOF
+    pre_build:
+        commands:
+            - echo Fetching CodeArtifact authorization token...
+            - export CODEARTIFACT_TOKEN=$(aws codeartifact get-authorization-token --domain $CODEARTIFACT_DOMAIN --domain-owner $CODEARTIFACT_DOMAIN_OWNER --query authorizationToken --output text)
+            - export CODEARTIFACT_REPO_URL=https://${CODEARTIFACT_DOMAIN}-${CODEARTIFACT_DOMAIN_OWNER}.d.codeartifact.${AWS_DEFAULT_REGION}.amazonaws.com/maven/${CODEARTIFACT_REPO}/
+            - mkdir -p /root/.m2
+            - |
+                cat > /root/.m2/settings.xml << EOF
+                <settings>
+                  <servers>
+                    <server>
+                      <id>codeartifact</id>
+                      <username>aws</username>
+                      <password>$CODEARTIFACT_TOKEN</password>
+                    </server>
+                  </servers>
+                </settings>
+                EOF
 
-  build:
-    commands:
-      - echo Running tests...
-      - mvn clean verify
+    build:
+        commands:
+            - echo Running tests...
+            - mvn clean verify
 
-  post_build:
-    commands:
-      - echo Deploying to CodeArtifact...
-      - mvn deploy -DskipTests -DaltDeploymentRepository=codeartifact::default::$CODEARTIFACT_REPO_URL
+    post_build:
+        commands:
+            - echo Deploying to CodeArtifact...
+            - export CODEARTIFACT_REPO_URL=https://${CODEARTIFACT_DOMAIN}-${CODEARTIFACT_DOMAIN_OWNER}.d.codeartifact.${AWS_DEFAULT_REGION}.amazonaws.com/maven/${CODEARTIFACT_REPO}/
+            - mvn deploy -DskipTests -DaltDeploymentRepository=codeartifact::default::$CODEARTIFACT_REPO_URL
 
 artifacts:
-  files:
-    - target/models-*.jar
+    files:
+        - target/models-*.jar
