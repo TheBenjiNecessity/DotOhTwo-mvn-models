@@ -35,7 +35,7 @@ phases:
             - export CODEARTIFACT_TOKEN=$(aws codeartifact get-authorization-token --domain $CODEARTIFACT_DOMAIN --domain-owner $CODEARTIFACT_DOMAIN_OWNER --query authorizationToken --output text)
             - printf '<settings><servers><server><id>codeartifact</id><username>aws</username><password>%s</password></server></servers></settings>' "$CODEARTIFACT_TOKEN" > /root/.m2/settings.xml
             - export CODEARTIFACT_REPO_URL=https://${CODEARTIFACT_DOMAIN}-${CODEARTIFACT_DOMAIN_OWNER}.d.codeartifact.${AWS_DEFAULT_REGION}.amazonaws.com/maven/${CODEARTIFACT_REPO}/
-            - mvn deploy -DskipTests -DaltDeploymentRepository=codeartifact::default::$CODEARTIFACT_REPO_URL
+            - mvn deploy -s /root/.m2/settings.xml -DskipTests -DaltDeploymentRepository=codeartifact::default::$CODEARTIFACT_REPO_URL
 
 artifacts:
     files:
